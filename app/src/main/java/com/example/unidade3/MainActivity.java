@@ -1,15 +1,21 @@
 package com.example.unidade3;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -17,161 +23,108 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import model.ItemModel;
 
 public class MainActivity extends AppCompatActivity {
+    Context context;
 
-    MeuSQLite gerenciadorBancoDeDados;
-    SQLiteDatabase bancoDeDados;
-    ArrayAdapter<String> adapterListaItem;
+    Map<String, String> dicionarioUsuarios = new HashMap<String, String>(){{
+        put("juca", "bala");
+        put("anderson", "silva");
+        put("cristiano","ronaldo");
+    }};
 
-    ListView listView;
+    Map<String, String> dicionarioDicas = new HashMap<String, String>() {{
+        put("juca", "Doce muito popular.");
+        put("anderson", "Sobrenome muito comum no Brasil.");
+        put("cristiano","Fez dois gols na final da copa de 2002.");
+    }};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.context = this;
 
-        gerenciadorBancoDeDados = new MeuSQLite(this, "projetodb");
+        Button btnLogin = findViewById(R.id.btnlogin);
 
-        //adapter da lista
-        ArrayList<String> lista = this.ReadAllItem();
-
-        this.listView = findViewById(R.id.lista);
-
-        this.adapterListaItem = new ArrayAdapter<>(this, android.R.layout
-                .simple_list_item_1, lista);
-
-        listView.setAdapter(adapterListaItem);
-
-        Button btnSalvar = findViewById(R.id.btnSalvar);
-
-        btnSalvar.setOnClickListener(new View.OnClickListener() {
+        btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SalvarItem();
-            }
-        });
-
-        Button btnCancelar = findViewById(R.id.btnCancelar);
-
-        btnCancelar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LimparCampos();
+                Login();
             }
         });
     }
 
-    private void LimparCampos(){
+    private void Login(){
+        EditText username = findViewById(R.id.username);
+        EditText password = findViewById(R.id.password);
 
-        TextView idTextView = findViewById(R.id.id_item);
+        String user = username.getText().toString();
+        String pass = password.getText().toString();
 
-        idTextView.setText("0");
+        String senhaCorreta = dicionarioUsuarios.get(user);
 
-        TextView descricaoTextView = findViewById(R.id.descricao_item);
+        if(pass.equals(senhaCorreta)){
 
-        descricaoTextView.setText(null);
+            Intent i = new Intent(MainActivity.this, ItemActivity.class);
 
-        TextView quantidadeTextView = findViewById(R.id.quantidade_item);
+            startActivity(i);
 
-        quantidadeTextView.setText(null);
+        }else if(senhaCorreta == null){
+            Toast.makeText(context, "USUÁRIO INEXISTENTE!", Toast.LENGTH_SHORT).show();
 
+        }else{
+            AlertDialog alert = this.CreateYesNoAlert(user);
+
+            alert.show();
+
+        }
     }
 
-    private void SalvarItem(){
-        TextView descricaoTextView = findViewById(R.id.descricao_item);
-        TextView quantidadeTextView = findViewById(R.id.quantidade_item);
-        TextView idTextView = findViewById(R.id.id_item);
+    private AlertDialog CreateYesNoAlert(String user){
 
-        boolean isValid = true;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
-        int id = Integer.parseInt(idTextView.getText().toString());
-        String descricao = descricaoTextView.getText().toString();
+        builder.setMessage("Senha incorreta! Gostaria de ver a dica de senha?");
 
-        if(descricao.isEmpty() || quantidadeTextView.getText().toString().isEmpty()){
-            Toast.makeText(this, "Descrição e quantidade são obrigatórios", Toast.LENGTH_SHORT).show();
-            isValid = false;
-        }
+        builder.setPositiveButton("SIM", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                AlertDialog alert = CreateDicaAlert(user);
 
-        int quantidade = Integer.parseInt(quantidadeTextView.getText().toString());
+                alert.show();
 
-        if(isValid){
-
-            ItemModel itemModel = new ItemModel(id, descricao, quantidade);
-
-            if(itemModel.getId() > 0){
-
-
-
-            }else{
-
-                ContentValues valores = new ContentValues();
-                valores.put("descricao",  itemModel.getDescricao());
-                valores.put("quantidade", itemModel.getQuantidade() );
-
-                bancoDeDados = gerenciadorBancoDeDados.getWritableDatabase();
-
-                long resultado = bancoDeDados.insert("item", null, valores);
-
-                bancoDeDados.close();
-
-                if (resultado ==-1)
-                    Toast.makeText(this,"Não foi possível inserir este item",Toast.LENGTH_SHORT).show();
-                else {
-                    Toast.makeText(this,"Item inserido: " + itemModel.getDescricao() + " n: " + itemModel.getQuantidade(),Toast.LENGTH_SHORT).show();
-
-                    this.AtualizarGrid();
-
-                    this.LimparCampos();
-                }
+                dialogInterface.dismiss();
             }
-        }
+        });
+
+        builder.setNegativeButton("NÃO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+
+        AlertDialog alert = builder.create();
+
+        return alert;
     }
 
-    private void AtualizarGrid(){
+    private AlertDialog CreateDicaAlert(String user){
 
-        ArrayList<String> lista = this.ReadAllItem();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
-        this.listView = findViewById(R.id.lista);
+        String dica = dicionarioDicas.get(user);
 
-        adapterListaItem =  new ArrayAdapter<>(this, android.R.layout
-                .simple_list_item_1, lista);
+        builder.setTitle("Dica");
+        builder.setMessage(dica);
 
-        adapterListaItem.notifyDataSetChanged();
+        AlertDialog alert = builder.create();
 
-        listView.setAdapter(adapterListaItem);
-
-        listView.invalidateViews();
-        listView.refreshDrawableState();
-    }
-
-    private ArrayList<String> ReadAllItem(){
-        ArrayList<String> listaItem = new ArrayList<>();
-
-        bancoDeDados = gerenciadorBancoDeDados.getReadableDatabase();
-
-        String[] campos_item = {"id", "descricao", "quantidade"};
-        Cursor lista = bancoDeDados.query("item", campos_item, null, null, null, null, null );
-
-        lista.moveToFirst();
-
-        while(lista.isAfterLast() == false){
-
-            int id = Integer.parseInt(lista.getString(lista.getColumnIndexOrThrow("id")));
-            String descricao = lista.getString(lista.getColumnIndexOrThrow("descricao"));
-            int quantidade = Integer.parseInt(lista.getString(lista.getColumnIndexOrThrow("quantidade")));
-
-            String itemInfo = id + " - " + descricao + " - " + quantidade;
-
-            listaItem.add(itemInfo);
-
-            lista.moveToNext();
-        }
-
-        bancoDeDados.close();
-
-        return listaItem;
+        return alert;
     }
 }

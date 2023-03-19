@@ -12,6 +12,10 @@
         android:theme="@style/Theme.Unidade3"
         tools:targetApi="31">
         <activity
+            android:name=".ItemActivity"
+            android:windowSoftInputMode="adjustPan">
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
