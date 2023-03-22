@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(pass.equals(senhaCorreta)){
 
-            Intent i = new Intent(MainActivity.this, ItemActivity.class);
+            Intent i = new Intent(MainActivity.this, MenuActivity.class);
 
             startActivity(i);
 

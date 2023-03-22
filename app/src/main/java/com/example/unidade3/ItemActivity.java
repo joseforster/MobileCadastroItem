@@ -22,8 +22,6 @@ public class ItemActivity extends AppCompatActivity {
 
     MeuSQLite gerenciadorBancoDeDados;
     SQLiteDatabase bancoDeDados;
-    ArrayAdapter<String> adapterListaItem;
-    ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,16 +29,6 @@ public class ItemActivity extends AppCompatActivity {
         setContentView(R.layout.item);
 
         gerenciadorBancoDeDados = new MeuSQLite(this, "projetodb");
-
-        //adapter da lista
-        ArrayList<String> lista = this.ReadAllItem();
-
-        this.listView = findViewById(R.id.lista);
-
-        this.adapterListaItem = new ArrayAdapter<>(this, android.R.layout
-                .simple_list_item_1, lista);
-
-        listView.setAdapter(adapterListaItem);
 
         Button btnSalvar = findViewById(R.id.btnSalvar);
 
@@ -69,25 +57,21 @@ public class ItemActivity extends AppCompatActivity {
             }
         });
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String item = adapterListaItem.getItem(i);
+        Bundle b = this.getIntent().getExtras();
 
-                String id = item.split(" - ")[0];
-                String descricao = item.split(" - ")[1];
-                String quantidade = item.split(" - ")[2];
+        if(b != null){
+            String id = b.getString("id");
+            String descricao = b.getString("descricao");
+            String quantidade = b.getString("quantidade");
 
-                TextView idTextView = findViewById(R.id.id_item);
-                idTextView.setText(id);
+            TextView idTextView = findViewById(R.id.id_item);
+            TextView descricaoTextView = findViewById(R.id.descricao_item);
+            TextView quantidadeTextView = findViewById(R.id.quantidade_item);
 
-                TextView descricaoTextView = findViewById(R.id.descricao_item);
-                descricaoTextView.setText(descricao);
-
-                TextView quantidadeTextView = findViewById(R.id.quantidade_item);
-                quantidadeTextView.setText(quantidade);
-            }
-        });
+            idTextView.setText(id);
+            descricaoTextView.setText(descricao);
+            quantidadeTextView.setText(quantidade);
+        }
     }
 
     private void ExcluirItem(){
@@ -106,8 +90,6 @@ public class ItemActivity extends AppCompatActivity {
             Toast.makeText(this,"Erro ao realizar operação",Toast.LENGTH_SHORT).show();
         else {
             Toast.makeText(this,"Item excluído com sucesso",Toast.LENGTH_SHORT).show();
-
-            this.AtualizarGrid();
 
             this.LimparCampos();
         }
@@ -177,55 +159,8 @@ public class ItemActivity extends AppCompatActivity {
             else {
                 Toast.makeText(this,"Item salvo: " + itemModel.getDescricao() + " n: " + itemModel.getQuantidade(),Toast.LENGTH_SHORT).show();
 
-                this.AtualizarGrid();
-
                 this.LimparCampos();
             }
         }
-    }
-
-    private void AtualizarGrid(){
-
-        ArrayList<String> lista = this.ReadAllItem();
-
-        this.listView = findViewById(R.id.lista);
-
-        adapterListaItem =  new ArrayAdapter<>(this, android.R.layout
-                .simple_list_item_1, lista);
-
-        adapterListaItem.notifyDataSetChanged();
-
-        listView.setAdapter(adapterListaItem);
-
-        listView.invalidateViews();
-        listView.refreshDrawableState();
-    }
-
-    private ArrayList<String> ReadAllItem(){
-        ArrayList<String> listaItem = new ArrayList<>();
-
-        bancoDeDados = gerenciadorBancoDeDados.getReadableDatabase();
-
-        String[] campos_item = {"id", "descricao", "quantidade"};
-        Cursor lista = bancoDeDados.query("item", campos_item, null, null, null, null, null );
-
-        lista.moveToFirst();
-
-        while(lista.isAfterLast() == false){
-
-            int id = Integer.parseInt(lista.getString(lista.getColumnIndexOrThrow("id")));
-            String descricao = lista.getString(lista.getColumnIndexOrThrow("descricao"));
-            int quantidade = Integer.parseInt(lista.getString(lista.getColumnIndexOrThrow("quantidade")));
-
-            String itemInfo = id + " - " + descricao + " - " + quantidade;
-
-            listaItem.add(itemInfo);
-
-            lista.moveToNext();
-        }
-
-        bancoDeDados.close();
-
-        return listaItem;
     }
 }

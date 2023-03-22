@@ -12,10 +12,6 @@
         android:theme="@style/Theme.Unidade3"
         tools:targetApi="31">
         <activity
-            android:name=".ItemActivity"
-            android:windowSoftInputMode="adjustPan">
-        </activity>
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
@@ -24,6 +20,16 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".ListarItemActivity"
+            android:windowSoftInputMode="adjustPan">
+        </activity>
+        <activity
+            android:name=".ItemActivity">
+        </activity>
+        <activity
+            android:name=".MenuActivity">
         </activity>
     </application>
 
